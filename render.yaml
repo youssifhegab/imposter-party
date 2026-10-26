@@ -1,0 +1,22 @@
+# Render Blueprint: in the Render dashboard choose New → Blueprint and pick this repository.
+# The database is on Neon (free and doesn't expire), so its connection details are entered as secrets.
+services:
+  - type: web
+    name: imposter-party-server
+    runtime: docker
+    plan: free
+    rootDir: server
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      # Behind Render's proxy every request comes from the proxy; this makes request.remoteAddr the player's real
+      # IP (from X-Forwarded-For, trusting only private-network proxies), so the join rate limit is per player.
+      - key: SERVER_FORWARD_HEADERS_STRATEGY
+        value: native
+      - key: DB_URL
+        sync: false # e.g. jdbc:postgresql://ep-xxx.eu-central-1.aws.neon.tech/neondb?sslmode=require
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false

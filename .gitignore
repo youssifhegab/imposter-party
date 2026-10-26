@@ -1,0 +1,13 @@
+.DS_Store
+.idea/
+*.iml
+# server
+server/.gradle/
+server/build/
+server/.kotlin/
+# mobile
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+mobile/ios/
+mobile/android/
