@@ -9,6 +9,11 @@ services:
     dockerfilePath: ./Dockerfile
     healthCheckPath: /api/health
     autoDeploy: true
+    # Only redeploy when the server (or this file) changes, not on app-only pushes.
+    buildFilter:
+      paths:
+        - server/**
+        - render.yaml
     envVars:
       # Behind Render's proxy every request comes from the proxy; this makes request.remoteAddr the player's real
       # IP (from X-Forwarded-For, trusting only private-network proxies), so the join rate limit is per player.
