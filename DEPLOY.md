@@ -9,7 +9,7 @@ open the app then waits about a minute while it wakes. During a game it stays aw
 ## 1. Database (Neon)
 
 1. Sign up at https://neon.tech (GitHub login works) and create a project, e.g. `imposter`, in the region
-   closest to your players.
+   **AWS Europe Central 1 (Frankfurt)**, the same region as the Render server in `render.yaml`.
 2. On the project dashboard, open **Connect**, pick **Java**, and turn **off** connection pooling.
    You get something like `jdbc:postgresql://ep-cool-name-123.eu-central-1.aws.neon.tech/neondb?sslmode=require`
    plus a user and password. Keep those three values for step 3.
