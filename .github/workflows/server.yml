@@ -1,0 +1,42 @@
+# On every push to main that touches the server: run the tests, then deploy to Fly.io.
+# Needs the repo secret FLY_API_TOKEN (see DEPLOY.md).
+name: Server
+
+on:
+  push:
+    branches: [main]
+    paths: ['server/**', '.github/workflows/server.yml']
+  workflow_dispatch:
+
+# One deploy at a time; a newer push waits for the running one instead of cancelling it halfway.
+concurrency:
+  group: server-deploy
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: server
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+      # The tests need no database (see src/test/resources/application-test.yml).
+      - run: ./gradlew test
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      # --ha=false: exactly one machine, because each party lives in that server's memory.
+      - run: flyctl deploy --remote-only --ha=false
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

@@ -62,6 +62,42 @@ open it on Android and install the APK (allow "install unknown apps" when asked)
 TestFlight and the App Store need Apple's paid developer account, so iPhones use Expo Go for now: the app's
 JavaScript is published to Expo, and Expo Go opens it from a link, without your Mac running.
 
+## 5. Website (EAS Hosting)
+
+The same app as a website, for iPhones without Expo Go: open it in Safari, then **Share → Add to Home Screen** for
+an icon that opens full-screen. `mobile/public/` holds the page's home-screen icon and settings.
+
+Live: https://youssifhegab-imposter.expo.app. To deploy (after every app change):
+
+```sh
+cd mobile && npm run deploy:web
+```
+
+A new APK is only needed for native changes (icon, new native libraries). Code changes reach installed APKs with
+`npm run update:apk`.
+
+## Automatic deploys (GitHub Actions)
+
+Pushing to `main` deploys by itself, so the manual commands above are only needed as a fallback:
+
+- `server/` changed → `.github/workflows/server.yml` runs the tests, then `fly deploy`.
+- `mobile/` changed → `.github/workflows/mobile.yml` typechecks and lints, then deploys the website, publishes the
+  Expo Go update and the APK update, and starts a new APK build if something native changed (`app.json`, icons,
+  dependencies). To build an APK by hand: GitHub → **Actions** → **Mobile** → **Run workflow** → tick
+  **Build a new APK**.
+
+Progress and errors show in the repo's **Actions** tab.
+
+**Adding a library with native code?** Also raise `expo.version` in `mobile/app.json` (e.g. `1.0.0` → `1.1.0`).
+Installed APKs only take updates made for their own version, so they won't receive code that needs the new
+library and crash. Friends then install the new APK to get updates again.
+
+First time only, add two secrets on GitHub: the repo → **Settings** → **Secrets and variables** → **Actions** →
+**New repository secret**:
+
+- `FLY_API_TOKEN`: run `fly tokens create deploy -a imposter-party` and paste what it prints.
+- `EXPO_TOKEN`: on expo.dev, **Account settings** → **Access tokens** → **Create token**.
+
 ## Checking the deployed server from your phone during development
 
 `EXPO_PUBLIC_API_URL=https://imposter-party.fly.dev npx expo start` runs the app from your Mac but talks to the

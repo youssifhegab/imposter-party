@@ -1,0 +1,86 @@
+# On every push to main that touches the app: typecheck and lint, then ship it everywhere.
+# - Website (EAS Hosting), the Expo Go link (iPhones) and the installed APKs all get the new code.
+# - A new APK is built only when something native changed (app config, icons, dependencies), or when started
+#   by hand with "Build a new APK" ticked.
+# Needs the repo secret EXPO_TOKEN (see DEPLOY.md).
+name: Mobile
+
+on:
+  push:
+    branches: [main]
+    paths: ['mobile/**', '.github/workflows/mobile.yml']
+  workflow_dispatch:
+    inputs:
+      build_apk:
+        description: Build a new APK
+        type: boolean
+        default: false
+
+concurrency:
+  group: mobile-deploy
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: mobile
+
+env:
+  EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+
+  deploy:
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the full history, to compare against the previous push
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - run: npm ci
+
+      - name: Website
+        run: npm run deploy:web -- --non-interactive
+
+      # The commit message goes through an env var, never straight into the script, so its text can't run as code.
+      - name: Expo Go link
+        run: npm run update:expo-go -- --message "$MESSAGE" --non-interactive
+        env:
+          MESSAGE: ${{ github.event.head_commit.message || 'Manual deploy' }}
+      - name: Installed APKs (over the air)
+        run: npm run update:apk -- --message "$MESSAGE" --non-interactive
+        env:
+          MESSAGE: ${{ github.event.head_commit.message || 'Manual deploy' }}
+
+      - name: Did anything native change?
+        id: native
+        env:
+          BEFORE: ${{ github.event.before }}
+          FORCE: ${{ inputs.build_apk }}
+        run: |
+          if [ "$FORCE" = "true" ]; then echo "build=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          # A brand-new branch has no previous push to compare with.
+          if [ -z "$BEFORE" ] || ! git cat-file -e "$BEFORE" 2>/dev/null; then echo "build=false" >> "$GITHUB_OUTPUT"; exit 0; fi
+          changed=$(git diff --name-only "$BEFORE" HEAD -- app.json app.config.js eas.json package.json package-lock.json assets/icon.png 'assets/android-icon-*' assets/splash-icon.png)
+          echo "$changed"
+          [ -n "$changed" ] && echo "build=true" >> "$GITHUB_OUTPUT" || echo "build=false" >> "$GITHUB_OUTPUT"
+      - name: New APK
+        if: steps.native.outputs.build == 'true'
+        # --no-wait: the build runs in Expo's cloud; its link shows up on expo.dev when it's done.
+        run: npx eas-cli@latest build --platform android --profile preview --non-interactive --no-wait
