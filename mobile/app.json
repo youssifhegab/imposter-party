@@ -33,7 +33,17 @@
       "typedRoutes": true
     },
     "extra": {
-      "productionApiUrl": "https://imposter-party.fly.dev"
+      "productionApiUrl": "https://imposter-party.fly.dev",
+      "eas": {
+        "projectId": "8fa76572-0654-4fd9-b236-2f43b6d4de54"
+      }
+    },
+    "owner": "youssifhegab",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/8fa76572-0654-4fd9-b236-2f43b6d4de54"
     }
   }
 }
