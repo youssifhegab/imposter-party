@@ -15,6 +15,6 @@ WORKDIR /app
 COPY --from=build /app/build/libs/app.jar app.jar
 # Free hosts give ~512 MB: size the heap from the container limit, and use the low-overhead collector.
 ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=70 -XX:+UseSerialGC -XX:TieredStopAtLevel=1"
-# Render (and most hosts) pass the port in $PORT; application.yml reads it.
+# Some hosts pass the port in $PORT (application.yml reads it); Fly uses 8090 from fly.toml.
 EXPOSE 8090
 CMD ["java", "-jar", "app.jar"]

@@ -1,45 +1,51 @@
 # Deploying
 
-Free setup: the server on **Render** (free web service, Docker), the database on **Neon** (free Postgres that
-doesn't expire), the Android app as an **APK** built by **EAS**, and iPhones through **Expo Go**.
+The setup: the server on **Fly.io** (Docker, Frankfurt), the database on **Neon** (free Postgres, Frankfurt), the
+Android app as an **APK** built by **EAS**, and iPhones through **Expo Go**.
 
-What "free" costs you: Render sleeps the server after 15 minutes with nobody connected, and the first player to
-open the app then waits about a minute while it wakes. During a game it stays awake (the app pings every 15s).
+Live server: https://imposter-party.fly.dev (health check: `/api/health`).
+
+The server machine sleeps when nobody is connected. The first request after that waits about 10 seconds while it
+wakes. During a game it stays awake, because every phone keeps a socket open.
 
 ## 1. Database (Neon)
 
-1. Sign up at https://neon.tech (GitHub login works) and create a project, e.g. `imposter`, in the region
-   **AWS Europe Central 1 (Frankfurt)**, the same region as the Render server in `render.yaml`.
-2. On the project dashboard, open **Connect**, pick **Java**, and turn **off** connection pooling.
-   You get something like `jdbc:postgresql://ep-cool-name-123.eu-central-1.aws.neon.tech/neondb?sslmode=require`
-   plus a user and password. Keep those three values for step 3.
+1. Sign up at https://neon.tech and create a project in the region **AWS Europe Central 1 (Frankfurt)**, next to
+   the Fly server. Only the Postgres service is needed.
+2. Open **Connect**, turn **off** connection pooling, and pick **Java**. Split what it shows into three values:
+   - `DB_URL`: `jdbc:postgresql://ep-xxxx.eu-central-1.aws.neon.tech/neondb?sslmode=require`. Keep only
+     `?sslmode=require` after `/neondb`, and no `-pooler` in the host.
+   - `DB_USER`: `neondb_owner`
+   - `DB_PASSWORD`: the password
 
-The server creates the tables and loads the words itself on first start (Flyway), so there's nothing else to do.
+The server creates the tables and loads the words itself on start (Flyway), so there's nothing else to do.
 
-## 2. Code on GitHub
+## 2. Server (Fly.io)
 
-Render deploys from a Git repository (a private one is fine). From the repo root:
+The config is in `server/fly.toml`: one machine (each party lives in the server's memory, so there must only ever
+be one), 512 MB, Frankfurt, port 8090, sleeping when idle.
+
+First time only, with the Fly CLI (`brew install flyctl`, then `fly auth login`):
 
 ```sh
-git add -A && git commit -m "Imposter party game"
-git remote add origin https://github.com/<you>/imposter-party.git
-git push -u origin main
+cd server
+fly apps create imposter-party      # skip if the app exists already
+fly secrets set DB_URL='jdbc:postgresql://…/neondb?sslmode=require' DB_USER=neondb_owner DB_PASSWORD='…' \
+  SERVER_FORWARD_HEADERS_STRATEGY=native
+fly ips allocate-v6 && fly ips allocate-v4 --shared   # the public address; both are free
 ```
 
-## 3. Server (Render)
+To deploy (after every server change):
 
-1. Sign up at https://render.com with GitHub.
-2. **New → Blueprint**, pick the repository. Render reads `render.yaml` and proposes the
-   `imposter-party-server` web service on the free plan.
-3. Fill in the secrets from step 1: `DB_URL`, `DB_USER`, `DB_PASSWORD`. Apply.
-4. The first build takes a few minutes. When it's live, open `https://<your-service>.onrender.com/api/health`;
-   it should say `{"status":"ok"}`.
-5. If the address isn't `https://imposter-party-server.onrender.com`, put yours in `mobile/app.json` under
-   `expo.extra.productionApiUrl`.
+```sh
+cd server && fly deploy --ha=false
+```
 
-Every push to `main` redeploys the server.
+`--ha=false` keeps it to one machine. Useful commands: `fly logs`, `fly status`, `fly secrets list`.
 
-## 4. Android app (EAS Build → APK)
+If the app ever moves to another address, put it in `mobile/app.json` under `expo.extra.productionApiUrl`.
+
+## 3. Android app (EAS Build → APK)
 
 ```sh
 cd mobile
@@ -51,13 +57,12 @@ npx eas-cli@latest build --platform android --profile preview
 The build runs in Expo's cloud (free plan, may queue for a while) and ends with a link and QR code. Anyone can
 open it on Android and install the APK (allow "install unknown apps" when asked).
 
-## 5. iPhones (Expo Go)
+## 4. iPhones (Expo Go)
 
 TestFlight and the App Store need Apple's paid developer account, so iPhones use Expo Go for now: the app's
-JavaScript is published to Expo, and Expo Go opens it from a link, without your Mac running. See the notes in
-the conversation / below once this is set up.
+JavaScript is published to Expo, and Expo Go opens it from a link, without your Mac running.
 
 ## Checking the deployed server from your phone during development
 
-`EXPO_PUBLIC_API_URL=https://<your-service>.onrender.com npx expo start` runs the app from your Mac but talks to
-the deployed server.
+`EXPO_PUBLIC_API_URL=https://imposter-party.fly.dev npx expo start` runs the app from your Mac but talks to the
+deployed server.
