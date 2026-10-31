@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { Platform, View } from 'react-native';
 
+import { wakeServer } from '@/api/rooms';
 import { FONT_FILES } from '@/fonts';
 import { usePrefs } from '@/state/prefs';
 import { useColors } from '@/theme';
@@ -16,6 +17,10 @@ export default function RootLayout() {
   const c = useColors();
   const rtl = useIsRTL();
   const direction = useDirectionStyle();
+
+  useEffect(() => {
+    wakeServer();
+  }, []);
 
   useEffect(() => {
     if (hydrated) i18n.changeLanguage(resolveLanguage(language));

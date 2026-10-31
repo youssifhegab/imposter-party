@@ -14,7 +14,8 @@ export class RequestError extends Error {
   }
 }
 
-const TIMEOUT_MS = 8000;
+// The deployed server sleeps when nobody plays and takes ~10s to wake, so give the first request time.
+const TIMEOUT_MS = 25_000;
 
 export async function request<T>(path: string, init?: { method?: string; body?: unknown }): Promise<T> {
   const controller = new AbortController();
