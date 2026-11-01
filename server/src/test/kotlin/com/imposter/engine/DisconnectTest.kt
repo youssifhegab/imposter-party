@@ -167,8 +167,8 @@ class DisconnectTest {
         h.startGame()
         h.allReady()
         h.playAllTurns()
-        h.send(Event.Disconnected("p1"))
-        h.elapse(Rules.GRACE_MS)
+        // Leave rather than wait out the grace: the grace is as long as the longest discussion.
+        h.send(Event.Leave("p1"))
         assertEquals(Phase.DISCUSSION, h.room.phase)
         assertTrue(h.room.adminId != "p1")
         h.send(Event.SkipDiscussion(h.room.adminId))
