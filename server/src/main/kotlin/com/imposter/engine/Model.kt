@@ -27,7 +27,8 @@ object Rules {
     const val VOTE_MS = 30_000L
     const val REVOTE_MS = 20_000L
     const val GUESS_MS = 30_000L
-    const val GRACE_MS = 60_000L
+    // Long enough to lock your phone through a discussion: iOS drops the socket soon after the screen locks.
+    const val GRACE_MS = 5 * 60_000L
     const val EMPTY_ROOM_MS = 10 * 60_000L
     /** How many recently played word ids each phone may report, to avoid repeats across parties. */
     const val MAX_RECENT_WORDS = 300
@@ -78,7 +79,7 @@ data class Player(
     val connected: Boolean = false,
     /** When the current connection started; used to pick the next admin. */
     val connectedSince: Long? = null,
-    /** When the seat's 60s grace period started. Null while connected. */
+    /** When the seat's 5-minute grace period started. Null while connected. */
     val disconnectedAt: Long? = null,
     /** Joined mid-game; enters at the start of the next game. */
     val waiting: Boolean = false,

@@ -44,7 +44,7 @@ export function connect(next: Credentials) {
   open();
 }
 
-/** Closes the socket and forgets the room locally. The seat is held on the server for 60s. */
+/** Closes the socket and forgets the room locally. The seat is held on the server for 5 minutes. */
 export function disconnect() {
   creds = null;
   clearTimeout(reconnectTimer);

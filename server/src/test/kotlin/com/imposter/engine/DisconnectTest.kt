@@ -110,7 +110,7 @@ class DisconnectTest {
         val effects = h.send(Event.Connected("p2"))
         assertTrue(Effect.SendState("p2") in effects)
         assertTrue(effects.any { it is Effect.SendRole && it.playerId == "p2" })
-        h.elapse(60_000) // the old grace timer fires and is ignored
+        h.elapse(Rules.GRACE_MS) // the old grace timer fires and is ignored
         assertTrue("p2" in h.room.players)
         assertTrue(h.room.players.getValue("p2").connected)
     }
@@ -126,7 +126,7 @@ class DisconnectTest {
     }
 
     @Test
-    fun `seat is released after 60s away`() {
+    fun `seat is released after the grace period`() {
         val h = Harness(4)
         h.send(Event.Disconnected("p3"))
         h.elapse(Rules.GRACE_MS - 1)
