@@ -1,5 +1,5 @@
-# On every push to main that touches the server: run the tests, then deploy to Fly.io.
-# Needs the repo secret FLY_API_TOKEN (see DEPLOY.md).
+# On every push to main that touches the server: run the tests, then deploy to Dokku on the makhzanx server.
+# Needs the repo secret DOKKU_SSH_KEY: a private key whose public half is added with `dokku ssh-keys:add`.
 name: Server
 
 on:
@@ -35,8 +35,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: superfly/flyctl-actions/setup-flyctl@master
-      # --ha=false: exactly one machine, because each party lives in that server's memory.
-      - run: flyctl deploy --remote-only --ha=false
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        with:
+          fetch-depth: 0 # Dokku rejects a push from a shallow clone.
+      # Dokku builds server/Dockerfile (build-dir is set to server) and swaps the container once it's up.
+      - uses: dokku/github-action@v1.10.0
+        with:
+          branch: main # The deploy-branch set on the Dokku app.
+          git_remote_url: ssh://dokku@49.12.187.249:22/imposter-party
+          ssh_private_key: ${{ secrets.DOKKU_SSH_KEY }}
