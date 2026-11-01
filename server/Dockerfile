@@ -13,8 +13,9 @@ RUN ./gradlew --no-daemon bootJar -x test
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 COPY --from=build /app/build/libs/app.jar app.jar
+COPY start.sh start.sh
 # Free hosts give ~512 MB: size the heap from the container limit, and use the low-overhead collector.
 ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=70 -XX:+UseSerialGC -XX:TieredStopAtLevel=1"
 # Some hosts pass the port in $PORT (application.yml reads it); Fly uses 8090 from fly.toml.
 EXPOSE 8090
-CMD ["java", "-jar", "app.jar"]
+CMD ["./start.sh"]

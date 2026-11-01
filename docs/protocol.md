@@ -38,7 +38,7 @@ Every message in both directions is `{"type": string, "payload": object}`. `payl
 2. After `hello` the server sends `room_state` (and `role`, `guess_prompt`, `round_result`, or `final_result` if the game is at that point).
 3. Send `ping` every 15s. A socket silent for 40s is closed by the server.
 4. On reconnect, open a new socket and send `hello` again with the same token. A newer socket for the same player closes the older one.
-5. A player away for more than 60s loses their seat. Dropping during your own clue turn doesn't end it; the
+5. A player away for more than 5 minutes loses their seat. Dropping during your own clue turn doesn't end it; the
    turn timer keeps running, so reconnect in time to still give your clue.
 6. A dropped player still holds up REVEAL, VOTING, REVOTE and GUESS until they act or the phase timer ends.
    Only a player who has left (seat released) stops counting.
@@ -59,7 +59,7 @@ Every message in both directions is `{"type": string, "payload": object}`. `payl
 | `guess` | `{text}` (1–40 characters) | A caught imposter who got `guess_prompt`, GUESS, once |
 | `next_round` | `{}` | Admin, RESULTS (after the last round this goes to FINAL) |
 | `play_again` | `{}` | Admin, FINAL |
-| `leave` | `{}` | Anyone; frees the seat now instead of after 60s. Close the socket afterwards |
+| `leave` | `{}` | Anyone; frees the seat now instead of after 5 minutes. Close the socket afterwards |
 | `ping` | `{}` | Anyone, any time |
 
 `vote.targetIds` must be distinct, must not include the voter, and must have exactly:

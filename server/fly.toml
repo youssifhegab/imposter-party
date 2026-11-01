@@ -9,9 +9,10 @@ primary_region = "fra"
 [http_service]
   internal_port = 8090
   force_https = true
-  # The machine sleeps when nobody is connected and wakes (~10s) on the next request.
-  # Open game sockets count as connections, so it stays up during a game.
-  auto_stop_machines = "stop"
+  # The machine sleeps when nobody is connected and wakes on the next request. "suspend", not "stop": parties
+  # live only in memory, and phones drop their sockets when the screen locks, so a party where everyone put
+  # their phone down for a few minutes would be wiped by a stop. A suspend keeps memory and resumes in ~1s.
+  auto_stop_machines = "suspend"
   auto_start_machines = true
   min_machines_running = 0
 

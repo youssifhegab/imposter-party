@@ -14,7 +14,7 @@ export default function Room() {
   const hasState = useRoomStore((s) => s.state !== null);
   const ended = useRoomStore((s) => s.ended);
 
-  // The socket lives as long as this screen. Going back home closes it; the seat is held for 60s.
+  // The socket lives as long as this screen. Going back home closes it; the seat is held for 5 minutes.
   useEffect(() => {
     if (!creds) return;
     connect(creds);

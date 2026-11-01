@@ -3,7 +3,7 @@
 The setup: the server on **Fly.io** (Docker, Frankfurt), the database on **Neon** (free Postgres, Frankfurt), the
 Android app as an **APK** built by **EAS**, and iPhones through **Expo Go**.
 
-Live server: https://imposter-party.fly.dev (health check: `/api/health`).
+Live server: https://imposter.makhzanx.com (health check: `/api/health`).
 
 The server machine sleeps when nobody is connected. The first request after that waits about 10 seconds while it
 wakes. During a game it stays awake, because every phone keeps a socket open.
@@ -100,5 +100,5 @@ First time only, add two secrets on GitHub: the repo → **Settings** → **Secr
 
 ## Checking the deployed server from your phone during development
 
-`EXPO_PUBLIC_API_URL=https://imposter-party.fly.dev npx expo start` runs the app from your Mac but talks to the
+`EXPO_PUBLIC_API_URL=https://imposter.makhzanx.com npx expo start` runs the app from your Mac but talks to the
 deployed server.
